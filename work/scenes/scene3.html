@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --t: 0s;
+    --df-window-bg: #A5B4FC;
+    --df-card: #FFFBF5;
+    --df-ink: #1E293B;
+    --df-muted: #3F4668;
+    --df-primary: #1C1917;
+    --df-border: rgba(255,255,255,0.55);
+    --cat-focus: #58A6FF;
+    --cat-craft: #BC8CFF;
+    --cat-fitness: #3FB950;
+    --cat-recovery: #F0883E;
+    --cat-hydration: #38BDF8;
+    --spring: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1080px; height:1080px; overflow:hidden;
+    background: var(--df-window-bg);  /* periwinkle */
+    font-family:'Nunito', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.011em;
+  }
+  body { color: var(--df-ink); display:flex; align-items:center; justify-content:center; }
+  .stage { width:1080px; height:1080px; position:relative; padding:96px; }
+
+  .caption {
+    position:absolute; top:80px; left:0; right:0; text-align:center;
+    font-size:30px; font-weight:600; letter-spacing:-0.015em;
+    color: var(--df-ink);
+    opacity:0; transform: translateY(6px);
+    animation: capIn 0.8s var(--spring) 0.1s forwards;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t) + 0.1s);
+  }
+  @keyframes capIn { to { opacity:1; transform: translateY(0); } }
+
+  /* glass cream panel — faithful to .df-material recipe */
+  .panel {
+    width:680px; height:720px; margin-top:64px;
+    background: rgba(255, 251, 245, 0.78);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 0.5px solid var(--df-border);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 0.5px 0 rgba(255,255,255,0.95),
+      0 12px 32px -8px rgba(30, 27, 59, 0.18);
+    overflow:hidden;
+    position:relative;
+    opacity:0; transform: translateY(10px) scale(0.998);
+    animation: frameIn 0.7s var(--spring) 0.2s forwards;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t) + 0.2s);
+  }
+  @keyframes frameIn { to { opacity:1; transform: translateY(0) scale(1); } }
+
+  .panel-head {
+    padding: 20px 28px 12px;
+    border-bottom: 0.5px solid rgba(30, 41, 59, 0.08);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .panel-head .title { font-size:18px; font-weight:700; letter-spacing:-0.015em; }
+  .panel-head .day   { font-size:14px; font-weight:600; color:var(--df-muted); }
+
+  /* vertical 24h timeline */
+  .timeline {
+    padding: 18px 28px 24px;
+    position:relative;
+  }
+  /* hour ticks */
+  .ticks {
+    position:absolute; top:18px; left:78px; bottom:24px; width:30px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    font-family:'JetBrains Mono', monospace; font-size:11px;
+    color: var(--df-muted); opacity:0.7;
+  }
+  /* blocks column */
+  .blocks { margin-left:96px; position:relative; height:600px; }
+  .block {
+    position:absolute; left:0; right:0;
+    border-radius: 14px;
+    color: #fff;
+    font-size:14px; font-weight:700; letter-spacing:-0.01em;
+    padding: 8px 14px;
+    box-shadow: 0 6px 14px -4px rgba(30, 27, 59, 0.2);
+    display:flex; align-items:center; gap:8px;
+    opacity:0; transform: translateX(-12px);
+  }
+  .block .ic { font-size:14px; opacity:0.85; }
+  .block .dur { margin-left:auto; font-family:'JetBrains Mono', monospace; font-weight:500; font-size:11px; opacity:0.85; }
+
+  .block.b1 { /* 06:30–07:15 Movement */
+    top: 30px; height:48px; background: var(--cat-fitness);
+    animation: slideIn 0.5s var(--spring) 0.7s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.7s);
+  }
+  .block.b2 { /* 09:00–12:00 Work */
+    top: 90px; height:160px; background: var(--cat-focus);
+    animation: slideIn 0.5s var(--spring) 0.9s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.9s);
+  }
+  .block.b3 { /* 12:30–13:15 Meal-ish — using craft color since no Meal token */
+    top: 260px; height:48px; background: var(--cat-recovery);
+    animation: slideIn 0.5s var(--spring) 1.1s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.1s);
+  }
+  .block.b4 { /* 14:00–17:30 Personal */
+    top: 320px; height:170px; background: var(--cat-craft);
+    animation: slideIn 0.5s var(--spring) 1.3s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.3s);
+  }
+  .block.b5 { /* 18:00–22:30 Sleep (drawn at bottom, taller) */
+    top: 510px; height:84px; background: rgba(240, 136, 62, 0.85);
+    animation: slideIn 0.5s var(--spring) 1.5s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.5s);
+  }
+  @keyframes slideIn { to { opacity:1; transform: translateX(0); } }
+
+  /* hydration dots scattered along the timeline */
+  .water { position:absolute; width:10px; height:10px; border-radius:50%; background: var(--cat-hydration); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(56, 189, 248, 0.4); }
+  .water.w1 { top: 120px; left: -56px; }
+  .water.w2 { top: 220px; left: -56px; }
+  .water.w3 { top: 340px; left: -56px; }
+  .water.w4 { top: 460px; left: -56px; }
+
+  /* now line — diagonal pink/red dashed */
+  .now {
+    position:absolute; left:0; right:0;
+    top: 280px;
+    height: 0;
+    border-top: 2px dashed rgba(220, 38, 38, 0.7);
+  }
+  .now::after {
+    content:"now"; position:absolute; right:0; top:-22px;
+    background: #DC2626; color:#fff;
+    font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+    padding: 2px 8px; border-radius:9999px;
+  }
+
+  .mark {
+    position:absolute; bottom:48px; right:48px;
+    font-weight:800; font-size:22px; letter-spacing:-0.01em;
+    color: var(--df-ink); opacity:0.35;
+  }
+  .mark .dot { color: var(--df-card); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption">It shows your day. As blocks.</div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="title">Today · timeline</div>
+        <div class="day">Mon, Sep 29</div>
+      </div>
+      <div class="timeline">
+        <div class="ticks">
+          <span>06</span>
+          <span>09</span>
+          <span>12</span>
+          <span>15</span>
+          <span>18</span>
+          <span>21</span>
+        </div>
+        <div class="blocks">
+          <div class="block b1"><span class="ic">▲</span> Morning run<span class="dur">45m</span></div>
+          <div class="block b2"><span class="ic">●</span> Work — deep focus<span class="dur">3h</span></div>
+          <div class="block b3"><span class="ic">◐</span> Lunch<span class="dur">45m</span></div>
+          <div class="block b4"><span class="ic">◆</span> Personal project<span class="dur">3h 30m</span></div>
+          <div class="block b5"><span class="ic">☾</span> Sleep wind-down<span class="dur">4h</span></div>
+
+          <div class="water w1"></div>
+          <div class="water w2"></div>
+          <div class="water w3"></div>
+          <div class="water w4"></div>
+          <div class="now"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mark">focus triad<span class="dot">.</span></div>
+  </div>
+</body>
+</html>

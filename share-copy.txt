@@ -1,0 +1,29 @@
+focus triad. three things you care about — we track three more. your day stays yours. now in private beta.
+
+---
+
+alternate cuts:
+
+(short)  focus triad. a tracker. for your day. now in private beta. your day stays yours.
+
+(twitter/x)  focus triad. three things you care about. (we track three more.) timeline, habits, donut — your data stays in your browser. now in private beta.
+
+(deadpan one-liner)  focus triad. you have a day. we have a tracker.
+
+(founders' note)  we built focus triad because the day was getting away from us. it tracks six things, which is three more than the name implies. your day stays yours.
+
+---
+
+hashtags (optional, yc-parody register):
+
+#focusTriad #privateBeta #trackerApp #yourDayStaysYours #timeline #habits #donut
+
+---
+
+product reality (from the actual repo at github.com/Mohamedkhaled420/dayflow-web):
+
+- six tracker views: timeline, daily, weekly, habits, chat, settings
+- six categories: movement, work focus, personal, sleep, hydration, meals
+- mock data persists to localStorage now; supabase-ready later
+- BYO AI keys for photo calorie estimation + coach chat
+- the triad in the name is aspirational; the app tracks six. we are at peace with this.

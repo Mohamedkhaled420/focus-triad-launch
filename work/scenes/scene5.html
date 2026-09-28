@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --t: 0s;
+    --df-window-bg: #A5B4FC;
+    --df-card: #FFFBF5;
+    --df-ink: #1E293B;
+    --df-muted: #3F4668;
+    --df-primary: #1C1917;
+    --df-border: rgba(255,255,255,0.55);
+    --cat-focus: #58A6FF;
+    --cat-craft: #BC8CFF;
+    --cat-fitness: #3FB950;
+    --cat-recovery: #F0883E;
+    --cat-hydration: #38BDF8;
+    --spring: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1080px; height:1080px; overflow:hidden;
+    background: var(--df-window-bg);
+    font-family:'Nunito', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.011em;
+  }
+  body { color: var(--df-ink); display:flex; align-items:center; justify-content:center; }
+  .stage { width:1080px; height:1080px; position:relative; padding:96px; }
+
+  .caption-top {
+    position:absolute; top:80px; left:0; right:0; text-align:center;
+    font-size:36px; font-weight:600; letter-spacing:-0.015em;
+    color: var(--df-ink);
+    opacity:0; transform:translateY(6px);
+    animation: capIn 0.8s var(--spring) 0.15s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.15s);
+  }
+  @keyframes capIn { to { opacity:1; transform:translateY(0); } }
+
+  /* glass cream panel */
+  .panel {
+    width:760px; height:680px; margin-top:64px;
+    background: rgba(255, 251, 245, 0.78);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 0.5px solid var(--df-border);
+    border-radius: 24px;
+    box-shadow:
+      inset 0 0.5px 0 rgba(255,255,255,0.95),
+      0 12px 32px -8px rgba(30, 27, 59, 0.18);
+    overflow:hidden;
+    position:relative;
+    opacity:0; transform: translateY(10px) scale(0.998);
+    animation: frameIn 0.7s var(--spring) 0.25s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.25s);
+  }
+  @keyframes frameIn { to { opacity:1; transform:translateY(0) scale(1); } }
+
+  .panel-head {
+    padding: 20px 28px 12px;
+    border-bottom: 0.5px solid rgba(30, 41, 59, 0.08);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .panel-head .title { font-size:18px; font-weight:700; letter-spacing:-0.015em; }
+  .panel-head .day   { font-size:14px; font-weight:600; color:var(--df-muted); }
+
+  .donut-wrap {
+    display:flex; align-items:center; justify-content:center;
+    padding: 32px 28px 16px;
+  }
+  .donut-svg { width: 360px; height: 360px; display:block; }
+
+  /* donut segments — draw themselves via stroke-dasharray */
+  .seg {
+    fill: none;
+    stroke-width: 64;
+    stroke-linecap: butt;
+    stroke-dasharray: 0 1000;
+    transform: rotate(-90deg);
+    transform-origin: center;
+  }
+  /* 5 segments proportional to a plausible week: 28% / 22% / 18% / 17% / 15% (=100%) */
+  /* circumference of r=130 is 2*π*130 = 816.8 */
+  /* We'll just animate each segment from 0 to its target dasharray */
+  .seg.s1 { stroke: var(--cat-focus);    stroke-dashoffset: 0;  animation: seg1 1.0s var(--spring) 0.6s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.6s); }
+  .seg.s2 { stroke: var(--cat-craft);    animation: seg2 1.0s var(--spring) 0.95s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.95s); }
+  .seg.s3 { stroke: var(--cat-fitness);  animation: seg3 1.0s var(--spring) 1.3s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.3s); }
+  .seg.s4 { stroke: var(--cat-recovery); animation: seg4 1.0s var(--spring) 1.65s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.65s); }
+  .seg.s5 { stroke: var(--cat-hydration); animation: seg5 1.0s var(--spring) 2.0s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 2.0s); }
+
+  /* circumference 2π * 130 ≈ 816.81 */
+  /* seg1 = 28% of 816.81 ≈ 228.7 */
+  @keyframes seg1 { from { stroke-dasharray: 0 816.81; } to { stroke-dasharray: 228.7 816.81; } }
+  /* seg2 = 22% ≈ 179.7, starts at -228.7 */
+  @keyframes seg2 { from { stroke-dasharray: 0 816.81; stroke-dashoffset: -228.7; } to { stroke-dasharray: 179.7 816.81; stroke-dashoffset: -228.7; } }
+  /* seg3 = 18% ≈ 147.0, starts at -408.4 */
+  @keyframes seg3 { from { stroke-dasharray: 0 816.81; stroke-dashoffset: -408.4; } to { stroke-dasharray: 147.0 816.81; stroke-dashoffset: -408.4; } }
+  /* seg4 = 17% ≈ 138.86, starts at -555.4 */
+  @keyframes seg4 { from { stroke-dasharray: 0 816.81; stroke-dashoffset: -555.4; } to { stroke-dasharray: 138.86 816.81; stroke-dashoffset: -555.4; } }
+  /* seg5 = 15% ≈ 122.52, starts at -694.3 */
+  @keyframes seg5 { from { stroke-dasharray: 0 816.81; stroke-dashoffset: -694.3; } to { stroke-dasharray: 122.52 816.81; stroke-dashoffset: -694.3; } }
+
+  .legend {
+    padding: 0 36px 28px;
+    display:grid; grid-template-columns: 1fr 1fr; gap: 12px 24px;
+  }
+  .legend-item {
+    display:flex; align-items:center; gap:10px;
+    font-size:16px; font-weight:600; letter-spacing:-0.01em;
+    opacity:0; transform: translateY(4px);
+  }
+  .legend-item .ldot { width:12px; height:12px; border-radius:50%; flex:0 0 12px; }
+  .legend-item .lval { margin-left:auto; font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--df-muted); font-weight:500; }
+  .legend-item.l1 .ldot { background: var(--cat-focus); }
+  .legend-item.l2 .ldot { background: var(--cat-craft); }
+  .legend-item.l3 .ldot { background: var(--cat-fitness); }
+  .legend-item.l4 .ldot { background: var(--cat-recovery); }
+  .legend-item.l5 .ldot { background: var(--cat-hydration); }
+  .legend-item.l1 { animation: lgIn 0.5s ease-out 0.9s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.9s); }
+  .legend-item.l2 { animation: lgIn 0.5s ease-out 1.2s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.2s); }
+  .legend-item.l3 { animation: lgIn 0.5s ease-out 1.5s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.5s); }
+  .legend-item.l4 { animation: lgIn 0.5s ease-out 1.8s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.8s); }
+  .legend-item.l5 { animation: lgIn 0.5s ease-out 2.1s forwards; animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 2.1s); }
+  @keyframes lgIn { to { opacity:1; transform: translateY(0); } }
+
+  .mark {
+    position:absolute; bottom:48px; right:48px;
+    font-weight:800; font-size:22px; letter-spacing:-0.01em;
+    color: var(--df-ink); opacity:0.35;
+  }
+  .mark .dot { color: var(--df-card); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="caption-top">And the week. As a donut.</div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="title">Weekly · distribution</div>
+        <div class="day">Sep 22 – 28</div>
+      </div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 300 300">
+          <circle cx="150" cy="150" r="130" fill="none" stroke="rgba(30,41,59,0.06)" stroke-width="64" />
+          <circle class="seg s1" cx="150" cy="150" r="130" />
+          <circle class="seg s2" cx="150" cy="150" r="130" />
+          <circle class="seg s3" cx="150" cy="150" r="130" />
+          <circle class="seg s4" cx="150" cy="150" r="130" />
+          <circle class="seg s5" cx="150" cy="150" r="130" />
+          <text x="150" y="148" text-anchor="middle" font-family="Nunito" font-weight="800" font-size="34" fill="#1E293B" letter-spacing="-1">7d</text>
+          <text x="150" y="170" text-anchor="middle" font-family="Nunito" font-weight="500" font-size="13" fill="#3F4668">tracked</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <div class="legend-item l1"><span class="ldot"></span> Work<span class="lval">28%</span></div>
+        <div class="legend-item l2"><span class="ldot"></span> Personal<span class="lval">22%</span></div>
+        <div class="legend-item l3"><span class="ldot"></span> Movement<span class="lval">18%</span></div>
+        <div class="legend-item l4"><span class="ldot"></span> Sleep<span class="lval">17%</span></div>
+        <div class="legend-item l5"><span class="ldot"></span> Water<span class="lval">15%</span></div>
+      </div>
+    </div>
+    <div class="mark">focus triad<span class="dot">.</span></div>
+  </div>
+</body>
+</html>

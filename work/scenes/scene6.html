@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --t:0s;
+    --df-window-bg: #A5B4FC;
+    --df-card: #FFFBF5;
+    --df-ink: #1E293B;
+    --df-muted: #3F4668;
+    --df-primary: #1C1917;
+    --spring: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1080px; height:1080px; overflow:hidden;
+    background: var(--df-primary);
+    font-family:'Nunito', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.011em;
+  }
+  body { color: var(--df-card); display:flex; align-items:center; justify-content:center; }
+  .stage { width:1080px; height:1080px; position:relative; }
+
+  .center {
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:32px;
+  }
+  .brand {
+    font-weight:800; font-size:160px; letter-spacing:-0.045em; line-height:0.95;
+    opacity:0; transform:translateY(10px);
+    animation: brandIn 1.0s var(--spring) 0.15s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.15s);
+  }
+  .brand .dot { color: var(--df-window-bg); }  /* periwinkle period — pops against charcoal */
+  @keyframes brandIn { to { opacity:1; transform:translateY(0); } }
+
+  .line1 {
+    font-weight:600; font-size:34px; letter-spacing:-0.015em;
+    color: var(--df-card);
+    opacity:0; transform:translateY(6px);
+    animation: fadeUp 0.8s var(--spring) 0.7s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 0.7s);
+  }
+  .line2 {
+    font-weight:500; font-size:28px; letter-spacing:-0.01em;
+    color: rgba(255, 251, 245, 0.7);
+    opacity:0; transform:translateY(6px);
+    animation: fadeUp 0.8s var(--spring) 1.05s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.05s);
+  }
+  .line3 {
+    margin-top: 16px;
+    font-weight:500; font-size:20px; letter-spacing:-0.005em;
+    color: rgba(255, 251, 245, 0.45);
+    opacity:0; transform:translateY(6px);
+    animation: fadeUp 0.8s var(--spring) 1.55s forwards;
+    animation-play-state:paused; animation-delay:calc(-1 * var(--t) + 1.55s);
+  }
+  @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+  .mark {
+    position:absolute; bottom:48px; right:48px;
+    font-weight:800; font-size:22px; letter-spacing:-0.01em;
+    color: var(--df-card); opacity:0.45;
+  }
+  .mark .dot { color: var(--df-window-bg); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="center">
+      <div class="brand">focus triad<span class="dot">.</span></div>
+      <div class="line1">Three things you care about.</div>
+      <div class="line2">We track three more.</div>
+      <div class="line3">Now in private beta. Your day stays yours.</div>
+    </div>
+    <div class="mark">focus triad<span class="dot">.</span></div>
+  </div>
+</body>
+</html>
