@@ -179,105 +179,353 @@ hrender();
 addEventListener('message',e=>{if(e.source===fr[1].contentWindow&&e.data&&'hide' in e.data)document.body.classList.toggle('full',!!e.data.hide)});
 </script>
 <!-- ============================================================
-     CINEMATIC DEMO DRIVER — wraps #st in a #camera div for
-     zoom/pan control, adds brand-card + vignette overlays,
-     and runs a 24s choreography timeline of camera moves +
-     source app interactions (tab clicks, habit check, plus menu).
-     Does NOT modify the source script. All app interactions go
-     through the source's existing event handlers.
+     CINEMATIC DEMO DRIVER v2 — brag-skill approach.
+     Every frame is a pure function of time (--t CSS var).
+     Source's CSS transitions are nulled; visual transitions are
+     --t-driven CSS animations. Playwright captures frame-by-frame
+     at 30fps via screenshot() per frame.
      ============================================================ -->
 <style>
-  /* Camera wrapper — gets transform from .zoom-* classes */
-  #camera {
+  /* === CANVAS: landscape 1920×1080 === */
+  html, body {
+    width: 1920px !important;
+    height: 1080px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #0a0a14 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif !important;
+  }
+  body {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+  }
+
+  /* === BACKGROUND: stylized dark with aurora blobs === */
+  #demo-bg {
     position: fixed;
     inset: 0;
-    transform-origin: 50% 50%;
-    transform: scale(1.05) translate(0, 0);
-    transition: transform 1.6s cubic-bezier(0.32, 0.72, 0, 1),
-                opacity 0.8s ease;
-    will-change: transform, opacity;
-    z-index: 1;
+    z-index: 0;
+    background: radial-gradient(ellipse at 30% 40%, #1a1530 0%, #0a0a14 60%),
+                radial-gradient(ellipse at 70% 60%, #2a1a30 0%, transparent 60%);
+    overflow: hidden;
   }
-  /* Camera positions — each represents a focal point */
-  #camera.fade-in      { transform: scale(1.05) translate(0, 0); opacity: 1; }
-  #camera.zoom-out     { transform: scale(1.00) translate(0, 0); }
-  #camera.zoom-today-hero    { transform: scale(1.40) translate(0, -10%); }
-  #camera.zoom-habits-hero   { transform: scale(1.25) translate(0, 5%); }
-  #camera.zoom-habit-rows    { transform: scale(1.55) translate(0, 22%); }
-  #camera.zoom-training      { transform: scale(1.20) translate(0, -8%); }
-  #camera.zoom-nutrition     { transform: scale(1.20) translate(0, -10%); }
-  #camera.zoom-kcal          { transform: scale(1.45) translate(0, -18%); }
-  #camera.fade-final         { transform: scale(1.00) translate(0, 0); opacity: 0.55; }
+  #demo-bg i {
+    position: absolute;
+    width: 800px;
+    height: 800px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.45;
+    animation: drift 25s ease-in-out infinite alternate;
+  }
+  #demo-bg i:nth-child(1) { background: #5b6cff; left: -10%; top: -20%; }
+  #demo-bg i:nth-child(2) { background: #ff6b57; right: -10%; top: 20%; animation-delay: -8s; }
+  #demo-bg i:nth-child(3) { background: #30c48d; left: 40%; bottom: -20%; animation-delay: -14s; }
+  @keyframes drift {
+    to { transform: translate(60px, -40px) scale(1.1); }
+  }
 
-  /* Subtle vignette overlay for cinematic depth */
+  /* === PHONE MOCKUP === */
+  #phone-frame {
+    position: relative;
+    width: 540px;
+    height: 960px;
+    border-radius: 44px;
+    overflow: hidden;
+    background: var(--bg, #fbf7f0);
+    border: 10px solid #1a1a1a;
+    box-shadow:
+      0 0 0 2px #2a2a2a,
+      0 60px 120px -20px rgba(0,0,0,0.6),
+      0 30px 60px -10px rgba(0,0,0,0.4);
+    /* Make #phone-frame the containing block for the source's
+       position:fixed elements (#st, #nav, #menu, #sm) */
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* === CAMERA WRAPPER === */
+  /* The phone-frame is the camera target. We apply --t-driven
+     scale + transform-origin to it directly. */
+  /* (animations defined below — applied to #phone-frame) */
+
+  /* === NULL SOURCE TRANSITIONS ===
+     This is critical: the source uses CSS transitions which need
+     wall-clock time. We null them so they don't fire, and replace
+     with --t-driven CSS animations. */
+  .pane, .hl, .tab, .ck, .ck svg, #menu, .sm, .sc2, #plus, #plus svg,
+  .wd i, .sw, .sl, .nx .sw, .addb, .ai input, .ai button, .sgs button {
+    transition: none !important;
+  }
+
+  /* === --t-DRIVEN CAMERA ANIMATION ===
+     24s total. Keyframes set transform + transform-origin per scene. */
+  #phone-frame {
+    animation: cameraMove 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
+    transform-origin: 50% 50%;
+  }
+  @keyframes cameraMove {
+    /* 0% = t=0, 100% = t=24s.Percents are t/24*100. */
+    0%      { transform: scale(1.0); transform-origin: 50% 50%; opacity: 0; }
+    2%      { transform: scale(1.0); transform-origin: 50% 50%; opacity: 0; }   /* t=0.5 still fading in */
+    4%      { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }   /* t=1.0 fade-in done */
+    8%      { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }   /* t=2 hold */
+    12.5%   { transform: scale(2.4); transform-origin: 50% 22%; opacity: 1; }  /* t=3 Today zoom */
+    16%     { transform: scale(2.4); transform-origin: 50% 22%; opacity: 1; }  /* t=4 hold */
+    20%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=4.8 zoom out */
+    23%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=5.5 tab to Habits */
+    27%     { transform: scale(1.4); transform-origin: 50% 30%; opacity: 1; }   /* t=6.5 Habits hero zoom */
+    33%     { transform: scale(2.8); transform-origin: 50% 62%; opacity: 1; }  /* t=8 habit rows zoom */
+    35.4%   { transform: scale(2.8); transform-origin: 50% 62%; opacity: 1; }  /* t=8.5 habit check */
+    41.6%   { transform: scale(2.8); transform-origin: 50% 62%; opacity: 1; }   /* t=10 seal modal */
+    45%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }   /* t=10.8 zoom out */
+    52%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=12.5 tab to Training */
+    58%     { transform: scale(1.6); transform-origin: 50% 32%; opacity: 1; }  /* t=14 Training zoom */
+    66%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=16 zoom out */
+    69%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=16.5 tab to Nutrition */
+    75%     { transform: scale(2.4); transform-origin: 50% 28%; opacity: 1; }  /* t=18 kcal zoom */
+    83%     { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=20 zoom out */
+    87.5%   { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=21 plus menu */
+    91.6%   { transform: scale(1.0); transform-origin: 50% 50%; opacity: 1; }  /* t=22 brand card */
+    100%    { transform: scale(1.0); transform-origin: 50% 50%; opacity: 0.7; } /* t=24 end (dim) */
+  }
+
+  /* === --t-DRIVEN TAB PILL SLIDE === */
+  .hl {
+    animation: tabSlide 24s linear infinite !important;
+    animation-play-state: paused !important;
+    animation-delay: calc(-1 * var(--t, 0s)) !important;
+  }
+  @keyframes tabSlide {
+    /* Tab order in source: 0=Today, 1=Nutrition, 2=Training, 3=Habits.
+       Pill translateX = i * 100%. */
+    0%      { transform: translateX(0%); }      /* Today */
+    22.9%   { transform: translateX(0%); }        /* t=5.5 still Today */
+    25%     { transform: translateX(300%); }      /* t=6 Habits (slide animation in 0.5s) */
+    52%     { transform: translateX(300%); }      /* t=12.5 still Habits */
+    54.2%   { transform: translateX(200%); }      /* t=13 Training */
+    68.7%   { transform: translateX(200%); }      /* t=16.5 still Training */
+    70.8%   { transform: translateX(100%); }     /* t=17 Nutrition */
+    100%    { transform: translateX(100%); }      /* Nutrition stays */
+  }
+
+  /* === --t-DRIVEN PANE VISIBILITY (instant cut, no fade) === */
+  /* Today: visible t=0-5.5, hidden after */
+  #f0 { opacity: 1; }
+  #f0 { animation: paneToday 24s steps(1, end) infinite !important;
+        animation-play-state: paused !important;
+        animation-delay: calc(-1 * var(--t, 0s)) !important; }
+  @keyframes paneToday {
+    0%, 22.9%   { opacity: 1; }
+    23%         { opacity: 0; }
+    100%        { opacity: 0; }
+  }
+  /* Habits (#hab): hidden t=0-5.5, visible 5.5-12.5, hidden after */
+  #hab { opacity: 0; }
+  #hab { animation: paneHabits 24s steps(1, end) infinite !important;
+         animation-play-state: paused !important;
+         animation-delay: calc(-1 * var(--t, 0s)) !important; }
+  @keyframes paneHabits {
+    0%, 22.9%   { opacity: 0; }
+    23%         { opacity: 1; }
+    52%         { opacity: 1; }
+    52.1%       { opacity: 0; }
+    100%        { opacity: 0; }
+  }
+  /* Training (#f2): hidden t=0-12.5, visible 12.5-16.5, hidden after */
+  #f2 { opacity: 0; }
+  #f2 { animation: paneTraining 24s steps(1, end) infinite !important;
+        animation-play-state: paused !important;
+        animation-delay: calc(-1 * var(--t, 0s)) !important; }
+  @keyframes paneTraining {
+    0%, 52%      { opacity: 0; }
+    52.1%        { opacity: 1; }
+    68.7%        { opacity: 1; }
+    68.8%        { opacity: 0; }
+    100%         { opacity: 0; }
+  }
+  /* Nutrition (#f1): hidden t=0-16.5, visible after */
+  #f1 { opacity: 0; }
+  #f1 { animation: paneNutrition 24s steps(1, end) infinite !important;
+        animation-play-state: paused !important;
+        animation-delay: calc(-1 * var(--t, 0s)) !important; }
+  @keyframes paneNutrition {
+    0%, 68.7%    { opacity: 0; }
+    68.8%        { opacity: 1; }
+    100%         { opacity: 1; }
+  }
+
+  /* === --t-DRIVEN HABIT CHECK DRAW ===
+     At t=8.5, the first habit checkbox gets checked.
+     The check circle fills with the category color + the SVG
+     checkmark draws via stroke-dashoffset 26→0 over 0.5s. */
+  /* We target the first .ck inside #hab */
+  #hab .ck:nth-of-type(1),
+  #hab .ck {
+    /* this rule targets all .ck but only the first will be checked
+       in the demo. We'll use a specific selector for the first one. */
+  }
+  /* Use a body class to scope the check animation */
+  body.demo-checked #hab .hr:nth-of-type(1) .ck,
+  body.demo-checked #hab .hr:first-child .ck {
+    /* The fill + checkmark animation runs based on --t */
+  }
+  /* Easier: just animate the first .ck's bg + svg unconditionally
+     via --t. The other .ck's stay at default (unchecked). */
+  #hab .hr:first-child .ck {
+    animation: ckFill 24s linear infinite !important;
+    animation-play-state: paused !important;
+    animation-delay: calc(-1 * var(--t, 0s)) !important;
+  }
+  @keyframes ckFill {
+    0%, 35.4%   { background: transparent; box-shadow: inset 0 0 0 2.5px color-mix(in srgb, var(--c) 45%, transparent); }
+    37.5%       { background: var(--c); box-shadow: 0 10px 22px -8px var(--c); }
+    100%        { background: var(--c); box-shadow: 0 10px 22px -8px var(--c); }
+  }
+  #hab .hr:first-child .ck svg {
+    animation: ckDraw 24s linear infinite !important;
+    animation-play-state: paused !important;
+    animation-delay: calc(-1 * var(--t, 0s)) !important;
+  }
+  @keyframes ckDraw {
+    0%, 35.4%   { stroke-dashoffset: 26; }
+    37.5%       { stroke-dashoffset: 0; }
+    100%        { stroke-dashoffset: 0; }
+  }
+
+  /* === --t-DRIVEN SEAL MODAL ===
+     The "New Seal Earned" modal appears briefly after habit check,
+     at t=9.0-10.0, then dismissed. */
+  #sm {
+    animation: sealModal 24s linear infinite !important;
+    animation-play-state: paused !important;
+    animation-delay: calc(-1 * var(--t, 0s)) !important;
+    pointer-events: none !important;
+  }
+  @keyframes sealModal {
+    0%, 37.5%   { opacity: 0; }
+    37.5%       { opacity: 0; }
+    38%         { opacity: 1; }     /* t=9.12 appear */
+    41.6%       { opacity: 1; }     /* t=10 hold */
+    43%         { opacity: 0; }     /* t=10.3 dismiss */
+    100%        { opacity: 0; }
+  }
+
+  /* === --t-DRIVEN PLUS MENU SLIDE ===
+     At t=21.0, the + menu slides up. */
+  #menu {
+    animation: plusMenu 24s linear infinite !important;
+    animation-play-state: paused !important;
+    animation-delay: calc(-1 * var(--t, 0s)) !important;
+  }
+  @keyframes plusMenu {
+    0%, 87.5%   { opacity: 0; transform: translateY(14px) scale(0.9); }
+    89%         { opacity: 1; transform: none; }
+    100%        { opacity: 1; transform: none; }
+  }
+
+  /* === CINEMATIC OVERLAYS === */
   #vignette {
     position: fixed;
     inset: 0;
-    pointer-events: none;
     z-index: 50;
+    pointer-events: none;
     background: radial-gradient(ellipse at center,
       transparent 55%,
-      rgba(0, 0, 0, 0.15) 85%,
-      rgba(0, 0, 0, 0.35) 100%);
-    opacity: 0;
-    transition: opacity 1.0s ease;
+      rgba(0, 0, 0, 0.20) 85%,
+      rgba(0, 0, 0, 0.40) 100%);
+    animation: vignetteFade 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
   }
-  #vignette.on { opacity: 1; }
+  @keyframes vignetteFade {
+    0%, 2%   { opacity: 0; }
+    4%       { opacity: 1; }    /* t=1 vignette on */
+    100%     { opacity: 1; }
+  }
 
-  /* Black fade overlay (intro + outro) */
   #fade-overlay {
     position: fixed;
     inset: 0;
-    background: #000;
     z-index: 200;
+    background: #000;
     pointer-events: none;
-    opacity: 1;
-    transition: opacity 0.8s ease;
+    animation: fadeOverlay 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
   }
-  #fade-overlay.hidden { opacity: 0; }
+  @keyframes fadeOverlay {
+    0%       { opacity: 1; }
+    4%       { opacity: 0; }   /* t=1 fade in done */
+    91.6%    { opacity: 0; }   /* t=22 start outro fade */
+    100%     { opacity: 0.7; } /* t=24 dim but not full black */
+  }
 
-  /* Brand card at the end */
+  /* === BRAND OUTRO === */
   #brand-card {
     position: fixed;
     inset: 0;
+    z-index: 150;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0);
-    z-index: 150;
     pointer-events: none;
-    transition: background 0.9s ease;
+    animation: brandCard 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
   }
-  #brand-card.show { background: rgba(0, 0, 0, 0.55); }
+  @keyframes brandCard {
+    0%, 91.6%   { opacity: 0; background: transparent; }
+    95%         { opacity: 1; background: rgba(0,0,0,0.55); }
+    100%        { opacity: 1; background: rgba(0,0,0,0.55); }
+  }
   #brand-text {
-    font-family: -apple-system, "SF Pro Display", Inter, system-ui, sans-serif;
-    font-size: 96px;
+    font-size: 144px;
     font-weight: 700;
     color: #fff;
     letter-spacing: -0.04em;
+    text-align: center;
     opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 0.9s ease 0.15s, transform 0.9s cubic-bezier(0.32, 0.72, 0, 1) 0.15s;
+    transform: translateY(20px);
+    animation: brandText 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
   }
-  #brand-card.show #brand-text { opacity: 1; transform: translateY(0); }
+  @keyframes brandText {
+    0%, 91.6%   { opacity: 0; transform: translateY(20px); }
+    95%         { opacity: 1; transform: translateY(0); }
+    100%        { opacity: 1; transform: translateY(0); }
+  }
   #brand-tag {
     position: absolute;
-    bottom: 24%;
+    bottom: 28%;
     left: 0; right: 0;
     text-align: center;
-    font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif;
-    font-size: 18px;
+    font-size: 28px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.7);
     letter-spacing: 0.04em;
     opacity: 0;
-    transition: opacity 0.9s ease 0.5s;
+    animation: brandTag 24s linear infinite;
+    animation-play-state: paused;
+    animation-delay: calc(-1 * var(--t, 0s));
   }
-  #brand-card.show #brand-tag { opacity: 1; }
+  @keyframes brandTag {
+    0%, 91.6%   { opacity: 0; }
+    95%         { opacity: 1; }
+    100%        { opacity: 1; }
+  }
 </style>
 
-<div id="fade-overlay"></div>
+<!-- Cinematic overlays -->
+<div id="demo-bg"><i></i><i></i><i></i></div>
 <div id="vignette"></div>
+<div id="fade-overlay"></div>
 <div id="brand-card">
   <div id="brand-text">Dayflow</div>
   <div id="brand-tag">a day, in motion.</div>
@@ -285,97 +533,85 @@ addEventListener('message',e=>{if(e.source===fr[1].contentWindow&&e.data&&'hide'
 
 <script>
 (function () {
-  // ---- 1. Wrap #st in #camera (so we can zoom/pan the content area
-  //          without affecting the bottom nav pill). #menu (the slide-up
-  //          menu) is also outside #camera so it can overlay correctly. ----
-  const st = document.getElementById('st');
-  if (!st) { console.error('no #st found'); return; }
-  const cam = document.createElement('div');
-  cam.id = 'camera';
-  cam.className = 'fade-in';
-  st.parentNode.insertBefore(cam, st);
-  cam.appendChild(st);
+  // ---- 1. Build the phone-frame wrapper and transplant the source's
+  //          #st, #nav, #menu, #sm into it. The transform: translateZ(0)
+  //          on #phone-frame makes it the containing block for the
+  //          source's position:fixed elements. ----
+  const phoneFrame = document.createElement('div');
+  phoneFrame.id = 'phone-frame';
+  document.body.appendChild(phoneFrame);
 
-  const fadeOverlay = document.getElementById('fade-overlay');
-  const vignette = document.getElementById('vignette');
-  const brandCard = document.getElementById('brand-card');
-
-  // ---- 2. Helper to set camera class (preserves fade-in's opacity:1) ----
-  function camClass(name) {
-    // remove all zoom-* / fade-* classes
-    cam.className = cam.className.split(' ').filter(c => !c.startsWith('zoom-') && !c.startsWith('fade-')).join(' ');
-    if (name) cam.classList.add(name);
+  // Transplant the source's main structural elements.
+  // We move them OUT of body and INTO #phone-frame, preserving order.
+  const toMove = ['st', 'menu', 'nav', 'sm'];
+  for (const id of toMove) {
+    const el = document.getElementById(id);
+    if (el) phoneFrame.appendChild(el);
   }
 
-  // ---- 3. Helper to click a tab ----
+  // ---- 2. Expose the per-frame state setter ----
+  // Playwright calls window.__demoPlay(t) before each screenshot.
+  // The function sets --t for CSS animations and fires one-shot
+  // app interactions (tab clicks, habit check, plus menu, seal
+  // dismiss) at specific timecodes.
+  const fired = {
+    tabHabits: false,
+    tabTraining: false,
+    tabNutrition: false,
+    habitCheck: false,
+    sealDismiss: false,
+    plusMenu: false,
+  };
+
   function tab(n) {
     const btn = document.querySelector('button.tab[data-t="' + n + '"]');
     if (btn) btn.click();
   }
-
-  // ---- 4. Helper to click the first habit checkbox on the Habits view ----
   function tapFirstHabit() {
-    // The habit rows live inside #hab (the non-iframe Habits pane).
-    // The .ck button is the check circle.
     const ck = document.querySelector('#hab .ck');
     if (ck) ck.click();
   }
-
-  // ---- 4b. Helper to dismiss the "New Seal Earned" modal (#sm) ----
-  // The seal modal appears automatically when a habit earns a new streak.
-  // It has class .sm with .on to show. We remove .on to dismiss.
+  function plus() {
+    const p = document.getElementById('plus');
+    if (p) p.click();
+  }
   function dismissSealModal() {
     const sm = document.getElementById('sm');
     if (sm) sm.classList.remove('on');
   }
 
-  // ---- 5. Helper to click the + button ----
-  function plus() {
-    const p = document.getElementById('plus');
-    if (p) p.click();
-  }
+  window.__demoPlay = function (t) {
+    // Set --t for CSS animations
+    document.documentElement.style.setProperty('--t', t.toFixed(6) + 's');
 
-  // ---- 6. Choreography timeline ----
-  const timeline = [
-    [0.0,  () => {
-      // Initial state — fade-in class is already set on #camera.
-      // Reveal the page from black.
-      fadeOverlay.classList.add('hidden');
-    }],
-    [0.6,  () => {
-      camClass('zoom-out');
-      vignette.classList.add('on');
-    }],
-    [1.6,  () => camClass('zoom-today-hero')],
-    [4.0,  () => camClass('zoom-out')],
-    [5.5,  () => tab(3)],               // Habits tab
-    [6.6,  () => camClass('zoom-habits-hero')],
-    [8.6,  () => camClass('zoom-habit-rows')],
-    [10.5, () => tapFirstHabit()],       // check first habit (triggers seal modal)
-    [12.0, () => { dismissSealModal(); camClass('zoom-out'); }],
-    [13.5, () => tab(2)],               // Training tab
-    [14.6, () => camClass('zoom-training')],
-    [16.5, () => camClass('zoom-out')],
-    [18.0, () => tab(1)],               // Nutrition tab
-    [19.0, () => camClass('zoom-kcal')],
-    [21.0, () => camClass('zoom-out')],
-    [22.5, () => plus()],               // open + menu
-    [23.2, () => brandCard.classList.add('show')],
-    [23.7, () => camClass('fade-final')],
-  ];
-
-  const startT = performance.now();
-  let nextIdx = 0;
-  function tick() {
-    const t = (performance.now() - startT) / 1000;
-    while (nextIdx < timeline.length && timeline[nextIdx][0] <= t) {
-      try { timeline[nextIdx][1](); } catch (e) { console.error('demo step', nextIdx, e); }
-      nextIdx++;
+    // Fire one-shot actions
+    if (!fired.tabHabits && t >= 5.5) {
+      fired.tabHabits = true;
+      tab(3);  // Habits
     }
-    if (t < 25) requestAnimationFrame(tick);
-  }
-  // Start on next frame so the page has time to settle
-  requestAnimationFrame(() => { /* keep startT as set */ tick(); });
+    if (!fired.habitCheck && t >= 8.5) {
+      fired.habitCheck = true;
+      tapFirstHabit();
+    }
+    if (!fired.sealDismiss && t >= 10.0) {
+      fired.sealDismiss = true;
+      dismissSealModal();
+    }
+    if (!fired.tabTraining && t >= 12.5) {
+      fired.tabTraining = true;
+      tab(2);  // Training
+    }
+    if (!fired.tabNutrition && t >= 16.5) {
+      fired.tabNutrition = true;
+      tab(1);  // Nutrition
+    }
+    if (!fired.plusMenu && t >= 21.0) {
+      fired.plusMenu = true;
+      plus();
+    }
+  };
+
+  console.log('Dayflow demo driver v2 ready.');
 })();
 </script>
 
